@@ -2,81 +2,121 @@
   <view class="container">
     <view class="title">服药 & PH 记录</view>
 
+    <!-- 导出 导入 按钮 -->
+    <view class="btns">
+      <button class="btn" @click="exportData">导出备份</button>
+      <button class="btn" @click="importData">导入恢复</button>
+    </view>
+
     <view class="add-btn" @click="goAdd">
-      <text>+ 添加新记录</text>
+      添加新记录
     </view>
 
     <view class="list">
-      <view class="item" v-for="(item, index) in recordList" :key="index">
-        <view class="time">{{ item.createTime }}</view>
-        <view class="info">服药剂量：{{ item.dosage }}g</view>
-        <view class="info">尿液 PH：{{ item.phValue }}</view>
-        
-        <view class="btns">
-          <view class="edit-btn" @click="goEdit(index)">编辑</view>
-          <view class="del-btn" @click="del(index)">删除</view>
+      <view class="item" v-for="(item, index) in list" :key="index">
+        <view>剂量：{{ item.dosage }}g</view>
+        <view>PH值：{{ item.phValue }}</view>
+        <view>时间：{{ item.createTime }}</view>
+        <view class="operate">
+          <text @click="goEdit(index)">编辑</text>
+          <text @click="del(index)">删除</text>
         </view>
-      </view>
-
-      <view class="empty" v-if="recordList.length === 0">
-        暂无记录，点击上方添加
       </view>
     </view>
   </view>
 </template>
 
 <script>
-import { ref } from 'vue'
-import { getRecordList, deleteRecord } from '../../utils/storage'
-
 export default {
   data() {
     return {
-      recordList: []
-    }
+      list: []
+    };
   },
-  onLoad() {
-    this.loadList()
-  },
+
   onShow() {
-    this.loadList()
+    this.getList();
   },
+
   methods: {
-    loadList() {
-      this.recordList = getRecordList()
+    getList() {
+      this.list = uni.getStorageSync("drug_ph_records") || [];
     },
+
     goAdd() {
-      uni.navigateTo({ url: '/pages/add/add' })
+      uni.navigateTo({ url: "/pages/add/add" });
     },
+
     goEdit(index) {
-      uni.navigateTo({ url: '/pages/add/add?index=' + index })
+      uni.navigateTo({ url: "/pages/add/add?index=" + index });
     },
+
     del(index) {
       uni.showModal({
-        title: '确认删除',
-        content: '删除后无法恢复',
+        title: "确认删除",
         success: (res) => {
           if (res.confirm) {
-            deleteRecord(index)
-            this.loadList()
+            this.list.splice(index, 1);
+            uni.setStorageSync("drug_ph_records", this.list);
+            this.getList();
           }
         }
-      })
+      });
+    },
+
+    // ✅ 导出数据到剪贴板
+    exportData() {
+      const data = uni.getStorageSync("drug_ph_records") || [];
+      if (data.length === 0) {
+        uni.showToast({ title: "暂无数据", icon: "none" });
+        return;
+      }
+      const str = JSON.stringify(data);
+      uni.setClipboardData({
+        data: str,
+        success: () => {
+          uni.showToast({ title: "已复制到剪贴板" });
+        }
+      });
+    },
+
+    // ✅ 从剪贴板导入数据
+    importData() {
+      uni.showModal({
+        title: "提示",
+        content: "导入会覆盖当前所有数据，确定继续？",
+        success: (res) => {
+          if (res.confirm) {
+            uni.getClipboardData({
+              success: (res) => {
+                try {
+                  const data = JSON.parse(res.data);
+                  if (Array.isArray(data)) {
+                    uni.setStorageSync("drug_ph_records", data);
+                    this.getList();
+                    uni.showToast({ title: "导入成功" });
+                  } else {
+                    uni.showToast({ title: "数据格式错误", icon: "none" });
+                  }
+                } catch (e) {
+                  uni.showToast({ title: "数据格式错误", icon: "none" });
+                }
+              }
+            });
+          }
+        }
+      });
     }
   }
-}
+};
 </script>
 
 <style scoped>
-.container { padding: 20rpx; background: #f5f5f5; min-height: 100vh; }
-.title { font-size: 36rpx; font-weight: bold; text-align: center; margin: 20rpx 0; }
-.add-btn { background: #07c160; color: white; text-align: center; padding: 24rpx; border-radius: 12rpx; margin-bottom: 30rpx; }
-.list { background: white; border-radius: 16rpx; padding: 20rpx; }
-.item { padding: 24rpx; border-bottom: 1rpx solid #eee; }
-.time { font-size: 24rpx; color: #999; margin-bottom: 12rpx; }
-.info { font-size: 28rpx; line-height: 1.6; }
-.btns { display: flex; gap: 20rpx; margin-top: 20rpx; }
-.edit-btn { color: #07c160; font-size: 26rpx; }
-.del-btn { color: #ff6666; font-size: 26rpx; }
-.empty { text-align: center; padding: 60rpx 0; color: #999; }
+.container { padding: 30rpx; }
+.title { font-size: 36rpx; font-weight: bold; text-align: center; margin-bottom: 30rpx; }
+.btns { display: flex; gap: 20rpx; margin-bottom: 30rpx; }
+.btn { flex: 1; background: #07c160; color: #fff; padding: 20rpx; border-radius: 12rpx; font-size: 26rpx; }
+.add-btn { background: #409eff; color: white; text-align: center; padding: 28rpx; border-radius: 12rpx; margin-bottom: 30rpx; }
+.item { padding: 30rpx; border: 1rpx solid #eee; border-radius: 12rpx; margin-bottom: 20rpx; }
+.operate { display: flex; gap: 30rpx; margin-top: 20rpx; color: #409eff; }
 </style>
