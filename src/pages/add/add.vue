@@ -12,13 +12,12 @@
       <input v-model="phValue" type="digit" placeholder="例如：5.5" />
     </view>
 
-    <!-- 时间选择器：修复可点击、可选择、可显示 -->
-  <view class="item">
-    <text>记录时间</text>
-    <picker mode="datetime" :value="createTime" fields="month-day-hour-minute" @change="timeChange">
-      <view class="picker-box">{{ createTime }}</view>
-    </picker>
-  </view>
+    <view class="item">
+      <text>记录时间</text>
+      <view class="picker-box" @click="openDateTime">
+        {{ createTime }}
+      </view>
+    </view>
 
     <view class="save-btn" @click="save">
       保存记录
@@ -27,69 +26,89 @@
 </template>
 
 <script>
-import { saveRecord, updateRecord, getRecordList } from '../../utils/storage'
-
 export default {
   data() {
-    const now = new Date()
-    const defaultTime = now.toISOString().slice(0, 16).replace('T', ' ')
+    // 修复：原生 JS 生成时间，不使用 format
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hour = String(now.getHours()).padStart(2, '0');
+    const minute = String(now.getMinutes()).padStart(2, '0');
     
     return {
-      dosage: '',
-      phValue: '',
-      createTime: defaultTime,
+      dosage: "",
+      phValue: "",
+      createTime: `${year}-${month}-${day} ${hour}:${minute}`,
       isEdit: false,
-      editIndex: -1
-    }
+      editIndex: -1,
+    };
   },
-  
+
   onLoad(options) {
     if (options.index != null) {
-      this.isEdit = true
-      this.editIndex = Number(options.index)
-        
-      const list = getRecordList()
-      const item = list[this.editIndex]
-        
-      this.dosage = item.dosage || ''
-      this.phValue = item.phValue || ''
-      this.createTime = item.createTime || this.createTime
+      this.isEdit = true;
+      this.editIndex = Number(options.index);
+
+      const list = uni.getStorageSync("drug_ph_records") || [];
+      const item = list[this.editIndex];
+
+      this.dosage = item.dosage || "";
+      this.phValue = item.phValue || "";
+      this.createTime = item.createTime || this.createTime;
     }
   },
-  
+
   methods: {
-    timeChange(e) {
-      // 时间选择后赋值
-      this.createTime = e.detail.value
+    // 安卓 + 小程序 通用时间选择
+    openDateTime() {
+      uni.showModal({
+        title: "修改时间",
+        content: "格式：2026-03-25 22:30",
+        editable: true,
+        placeholderText: this.createTime,
+        success: (res) => {
+          if (res.confirm && res.editableText) {
+            this.createTime = res.editableText;
+          }
+        }
+      });
     },
-      
+
     save() {
       if (!this.dosage) {
-        uni.showToast({ title: '请输入剂量', icon: 'none' })
-        return
+        uni.showToast({ title: "请输入剂量", icon: "none" });
+        return;
       }
       if (!this.phValue) {
-        uni.showToast({ title: '请输入PH值', icon: 'none' })
-        return
+        uni.showToast({ title: "请输入PH值", icon: "none" });
+        return;
       }
 
       const record = {
         createTime: this.createTime,
         dosage: this.dosage,
-        phValue: this.phValue
-      }
+        phValue: this.phValue,
+      };
+
+      let list = uni.getStorageSync("drug_ph_records") || [];
+      list = JSON.parse(JSON.stringify(list));
 
       if (this.isEdit) {
-        updateRecord(record, this.editIndex)
+        list[this.editIndex] = record;
       } else {
-        saveRecord(record)
+        list.unshift(record);
       }
 
-      uni.showToast({ title: '保存成功' })
-      setTimeout(() => uni.navigateBack(), 1500)
-    }
-  }
-}
+      uni.setStorageSync("drug_ph_records", list);
+
+      uni.showToast({ title: "保存成功" });
+      setTimeout(() => {
+        uni.navigateBack();
+      }, 1500);
+    },
+  },
+};
 </script>
 
 <style scoped>
@@ -98,24 +117,12 @@ export default {
 .item { margin-bottom: 40rpx; }
 .item text { display: block; font-size: 28rpx; margin-bottom: 16rpx; }
 .item input {
-  border: 1rpx solid #ddd;
-  border-radius: 8rpx;
-  padding: 24rpx;
-  font-size: 28rpx;
+  border: 1rpx solid #ddd; border-radius: 8rpx; padding: 24rpx; font-size: 28rpx;
 }
 .picker-box {
-  border: 1rpx solid #ddd;
-  border-radius: 8rpx;
-  padding: 24rpx;
-  font-size: 28rpx;
-  color: #333;
+  border: 1rpx solid #ddd; border-radius: 8rpx; padding: 24rpx; font-size: 28rpx; color: #333;
 }
 .save-btn {
-  background: #07c160;
-  color: white;
-  text-align: center;
-  padding: 28rpx;
-  border-radius: 12rpx;
-  margin-top: 40rpx;
+  background: #07c160; color: white; text-align: center; padding: 28rpx; border-radius: 12rpx; margin-top: 40rpx;
 }
 </style>
