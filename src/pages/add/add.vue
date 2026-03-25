@@ -12,11 +12,20 @@
       <input v-model="phValue" type="digit" placeholder="例如：5.5" />
     </view>
 
+    <!-- 安卓 100% 不空白：日期选择 -->
     <view class="item">
-      <text>记录时间</text>
-      <view class="picker-box" @click="openDateTime">
-        {{ createTime }}
-      </view>
+      <text>日期</text>
+      <picker mode="date" :value="date" @change="onDateChange">
+        <view class="picker-box">{{ date }}</view>
+      </picker>
+    </view>
+
+    <!-- 安卓 100% 不空白：时间选择 -->
+    <view class="item">
+      <text>时间</text>
+      <picker mode="time" :value="time" @change="onTimeChange">
+        <view class="picker-box">{{ time }}</view>
+      </picker>
     </view>
 
     <view class="save-btn" @click="save">
@@ -28,18 +37,18 @@
 <script>
 export default {
   data() {
-    // 修复：原生 JS 生成时间，不使用 format
     const now = new Date();
     const year = now.getFullYear();
     const month = String(now.getMonth() + 1).padStart(2, '0');
     const day = String(now.getDate()).padStart(2, '0');
     const hour = String(now.getHours()).padStart(2, '0');
     const minute = String(now.getMinutes()).padStart(2, '0');
-    
+
     return {
       dosage: "",
       phValue: "",
-      createTime: `${year}-${month}-${day} ${hour}:${minute}`,
+      date: `${year}-${month}-${day}`,
+      time: `${hour}:${minute}`,
       isEdit: false,
       editIndex: -1,
     };
@@ -51,28 +60,26 @@ export default {
       this.editIndex = Number(options.index);
 
       const list = uni.getStorageSync("drug_ph_records") || [];
-      const item = list[this.editIndex];
+      const item = JSON.parse(JSON.stringify(list[this.editIndex]));
 
       this.dosage = item.dosage || "";
       this.phValue = item.phValue || "";
-      this.createTime = item.createTime || this.createTime;
+
+      // 自动拆分日期和时间
+      if (item.createTime) {
+        const dt = item.createTime.split(" ");
+        this.date = dt[0];
+        this.time = dt[1];
+      }
     }
   },
 
   methods: {
-    // 安卓 + 小程序 通用时间选择
-    openDateTime() {
-      uni.showModal({
-        title: "修改时间",
-        content: "格式：2026-03-25 22:30",
-        editable: true,
-        placeholderText: this.createTime,
-        success: (res) => {
-          if (res.confirm && res.editableText) {
-            this.createTime = res.editableText;
-          }
-        }
-      });
+    onDateChange(e) {
+      this.date = e.detail.value;
+    },
+    onTimeChange(e) {
+      this.time = e.detail.value;
     },
 
     save() {
@@ -86,7 +93,7 @@ export default {
       }
 
       const record = {
-        createTime: this.createTime,
+        createTime: `${this.date} ${this.time}`,
         dosage: this.dosage,
         phValue: this.phValue,
       };
@@ -101,11 +108,8 @@ export default {
       }
 
       uni.setStorageSync("drug_ph_records", list);
-
       uni.showToast({ title: "保存成功" });
-      setTimeout(() => {
-        uni.navigateBack();
-      }, 1500);
+      setTimeout(() => uni.navigateBack(), 1500);
     },
   },
 };
@@ -116,13 +120,7 @@ export default {
 .title { font-size: 36rpx; font-weight: bold; text-align: center; margin-bottom: 60rpx; }
 .item { margin-bottom: 40rpx; }
 .item text { display: block; font-size: 28rpx; margin-bottom: 16rpx; }
-.item input {
-  border: 1rpx solid #ddd; border-radius: 8rpx; padding: 24rpx; font-size: 28rpx;
-}
-.picker-box {
-  border: 1rpx solid #ddd; border-radius: 8rpx; padding: 24rpx; font-size: 28rpx; color: #333;
-}
-.save-btn {
-  background: #07c160; color: white; text-align: center; padding: 28rpx; border-radius: 12rpx; margin-top: 40rpx;
-}
+.item input { border: 1rpx solid #ddd; border-radius: 8rpx; padding: 24rpx; font-size: 28rpx; }
+.picker-box { border: 1rpx solid #ddd; border-radius: 8rpx; padding: 24rpx; font-size: 28rpx; color: #333; }
+.save-btn { background: #07c160; color: white; text-align: center; padding: 28rpx; border-radius: 12rpx; margin-top: 40rpx; }
 </style>
