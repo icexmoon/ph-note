@@ -8,13 +8,19 @@
     <view class="add-btn" @click="goAdd">添加新记录</view>
 
     <view class="list">
+      <!-- 根据 PH 值返回不同颜色 -->
       <view class="item" v-for="(item, index) in list" :key="index">
-        <view>剂量：{{ item.dosage }}g</view>
-        <view>PH值：{{ item.phValue }}</view>
-        <view>时间：{{ item.createTime }}</view>
-        <view class="operate">
-          <text @click="goEdit(index)">编辑</text>
-          <text @click="del(index)">删除</text>
+        <!-- 左侧彩色标记条 -->
+        <view class="left-bar" :style="{background: getPhColor(item.phValue)}"></view>
+        
+        <view class="content">
+          <view>剂量：{{ item.dosage }}g</view>
+          <view>PH值：{{ item.phValue }}</view>
+          <view>时间：{{ item.createTime }}</view>
+          <view class="operate">
+            <text @click="goEdit(index)">编辑</text>
+            <text @click="del(index)">删除</text>
+          </view>
         </view>
       </view>
     </view>
@@ -59,8 +65,20 @@ export default {
             uni.setStorageSync("drug_ph_records", this.list);
             this.getList();
           }
-        },
+        }
       });
+    },
+
+    // ✅ 根据 PH 值返回对应颜色
+    getPhColor(ph) {
+      ph = Number(ph)
+      if (ph < 6) {
+        return '#FFC107'; // 黄色 0-6
+      } else if (ph >= 6 && ph < 7) {
+        return '#4CAF50'; // 绿色 6-7
+      } else {
+        return '#2196F3'; // 蓝色 7-14
+      }
     },
   },
 };
@@ -92,12 +110,28 @@ export default {
   border-radius: 12rpx;
   margin-bottom: 30rpx;
 }
+
+/* 列表项布局：左侧色条 + 内容 */
 .item {
-  padding: 30rpx;
-  border: 1rpx solid #eee;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  background: #ffffff;
   border-radius: 12rpx;
   margin-bottom: 20rpx;
+  overflow: hidden;
 }
+
+/* 左侧彩色条 */
+.left-bar {
+  width: 12rpx;
+}
+
+.content {
+  padding: 30rpx;
+  flex: 1;
+}
+
 .operate {
   display: flex;
   gap: 30rpx;
