@@ -13,33 +13,50 @@
     <view class="menu-item" @click="clearData">
       <text>清空所有数据</text>
     </view>
+
+    <!-- 版本信息 -->
+    <view class="version-item">
+      <text>当前版本：{{ versionName }}</text>
+    </view>
   </view>
 </template>
 
 <script>
 export default {
   data() {
-    return {};
+    return {
+      versionName: "1.0.0" // 版本号
+    };
+  },
+
+  onLoad() {
+    this.getAppVersion();
   },
 
   methods: {
-    // 导出数据到剪贴板
+    // 获取安卓版本信息（兼容 H5）
+    getAppVersion() {
+      // #ifdef APP-PLUS
+      plus.runtime.getProperty(plus.runtime.appid, (wgtinfo) => {
+        this.versionName = wgtinfo.version || "1.0.0";
+      });
+      // #endif
+    },
+
+    // 导出
     exportData() {
       const data = uni.getStorageSync("drug_ph_records") || [];
       if (data.length === 0) {
-        uni.showToast({ title: "暂无数据可导出", icon: "none" });
+        uni.showToast({ title: "暂无数据", icon: "none" });
         return;
       }
-      const str = JSON.stringify(data);
       uni.setClipboardData({
-        data: str,
-        success: () => {
-          uni.showToast({ title: "已复制到剪贴板" });
-        },
+        data: JSON.stringify(data),
+        success: () => uni.showToast({ title: "已复制到剪贴板" }),
       });
     },
 
-    // 从剪贴板导入数据
+    // 导入
     importData() {
       uni.showModal({
         title: "确认导入",
@@ -53,8 +70,6 @@ export default {
                   if (Array.isArray(data)) {
                     uni.setStorageSync("drug_ph_records", data);
                     uni.showToast({ title: "导入成功" });
-                  } else {
-                    uni.showToast({ title: "数据格式错误", icon: "none" });
                   }
                 } catch (e) {
                   uni.showToast({ title: "数据格式错误", icon: "none" });
@@ -70,11 +85,11 @@ export default {
     clearData() {
       uni.showModal({
         title: "确认清空",
-        content: "确定要删除所有记录吗？此操作不可恢复！",
+        content: "确定删除所有记录？此操作不可恢复！",
         success: (res) => {
           if (res.confirm) {
             uni.setStorageSync("drug_ph_records", []);
-            uni.showToast({ title: "已清空所有数据" });
+            uni.showToast({ title: "已清空" });
           }
         },
       });
@@ -99,5 +114,11 @@ export default {
   border-radius: 12rpx;
   margin-bottom: 20rpx;
   font-size: 28rpx;
+}
+.version-item {
+  margin-top: 50rpx;
+  text-align: center;
+  font-size: 26rpx;
+  color: #999;
 }
 </style>
