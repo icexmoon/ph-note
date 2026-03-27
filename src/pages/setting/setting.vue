@@ -14,9 +14,10 @@
       <text>清空所有数据</text>
     </view>
 
-    <!-- 版本信息 -->
-    <view class="version-item">
-      <text>当前版本：{{ versionName }}</text>
+    <!-- 版本 + 版权信息 -->
+    <view class="copyright-box">
+      <view class="version">当前版本：{{ versionName }}</view>
+      <view class="copyright">© 2026 icexmoon@qq.com</view>
     </view>
   </view>
 </template>
@@ -25,7 +26,7 @@
 export default {
   data() {
     return {
-      versionName: "1.0.0" // 版本号
+      versionName: "1.0.0"
     };
   },
 
@@ -34,7 +35,7 @@ export default {
   },
 
   methods: {
-    // 获取安卓版本信息（兼容 H5）
+    // 获取APP版本
     getAppVersion() {
       // #ifdef APP-PLUS
       plus.runtime.getProperty(plus.runtime.appid, (wgtinfo) => {
@@ -43,7 +44,7 @@ export default {
       // #endif
     },
 
-    // 导出
+    // 导出数据
     exportData() {
       const data = uni.getStorageSync("drug_ph_records") || [];
       if (data.length === 0) {
@@ -56,7 +57,7 @@ export default {
       });
     },
 
-    // 导入
+    // 导入数据
     importData() {
       uni.showModal({
         title: "确认导入",
@@ -115,10 +116,20 @@ export default {
   margin-bottom: 20rpx;
   font-size: 28rpx;
 }
-.version-item {
-  margin-top: 50rpx;
+
+/* 版本 & 版权 */
+.copyright-box {
+  margin-top: 80rpx;
   text-align: center;
-  font-size: 26rpx;
   color: #999;
+  font-size: 26rpx;
+  line-height: 1.8;
+}
+.version {
+  margin-bottom: 10rpx;
+}
+.copyright {
+  color: #bbb;
+  font-size: 24rpx;
 }
 </style>
