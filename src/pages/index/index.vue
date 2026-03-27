@@ -8,9 +8,7 @@
     <view class="add-btn" @click="goAdd">添加新记录</view>
 
     <view class="list">
-      <!-- 根据 PH 值返回不同颜色 -->
       <view class="item" v-for="(item, index) in list" :key="index">
-        <!-- 左侧彩色标记条 -->
         <view class="left-bar" :style="{background: getPhColor(item.phValue)}"></view>
         
         <view class="content">
@@ -41,7 +39,14 @@ export default {
 
   methods: {
     getList() {
-      this.list = uni.getStorageSync("drug_ph_records") || [];
+      let data = uni.getStorageSync("drug_ph_records") || [];
+      
+      // ✅ 时间倒序排序（最新的在最上面）
+      data.sort((a, b) => {
+        return new Date(b.createTime) - new Date(a.createTime);
+      });
+
+      this.list = data;
     },
 
     goAdd() {
@@ -69,15 +74,15 @@ export default {
       });
     },
 
-    // ✅ 根据 PH 值返回对应颜色
+    // 根据 PH 值返回颜色
     getPhColor(ph) {
-      ph = Number(ph)
+      ph = Number(ph);
       if (ph < 6) {
-        return '#FFC107'; // 黄色 0-6
+        return "#ffc107"; // 黄色
       } else if (ph >= 6 && ph < 7) {
-        return '#4CAF50'; // 绿色 6-7
+        return "#4caf50"; // 绿色
       } else {
-        return '#2196F3'; // 蓝色 7-14
+        return "#2196f3"; // 蓝色
       }
     },
   },
@@ -110,8 +115,6 @@ export default {
   border-radius: 12rpx;
   margin-bottom: 30rpx;
 }
-
-/* 列表项布局：左侧色条 + 内容 */
 .item {
   display: flex;
   flex-direction: row;
@@ -121,17 +124,13 @@ export default {
   margin-bottom: 20rpx;
   overflow: hidden;
 }
-
-/* 左侧彩色条 */
 .left-bar {
   width: 12rpx;
 }
-
 .content {
   padding: 30rpx;
   flex: 1;
 }
-
 .operate {
   display: flex;
   gap: 30rpx;
