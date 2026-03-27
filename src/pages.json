@@ -1,21 +1,22 @@
 {
-	"pages": [ //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
-		{
-			"path": "pages/index/index",
-			"style": {
-				"navigationBarTitleText": "服药PH记录"
-			}
-		},
-		{
-			"path": "pages/add/add",
-			"style": {
-				"navigationBarTitleText": "添加记录"
-			}
-		}
-	],
-	"globalStyle": {
-		"navigationBarTextStyle": "white",
-		"navigationBarBackgroundColor": "#07c160",
-		"backgroundColor": "#f5f5f5"
-	}
+  "pages": [
+    {
+      "path": "pages/index/index",
+      "style": {
+        "navigationBarTitleText": "记录"
+      }
+    },
+    {
+      "path": "pages/add/add",
+      "style": {
+        "navigationBarTitleText": "添加/编辑"
+      }
+    },
+    {
+      "path": "pages/setting/setting",
+      "style": {
+        "navigationBarTitleText": "设置"
+      }
+    }
+  ]
 }

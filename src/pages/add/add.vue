@@ -45,7 +45,7 @@ export default {
     const minute = String(now.getMinutes()).padStart(2, '0');
 
     return {
-      dosage: "",
+      dosage: "0",
       phValue: "",
       date: `${year}-${month}-${day}`,
       time: `${hour}:${minute}`,
